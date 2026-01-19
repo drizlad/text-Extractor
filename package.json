@@ -1,0 +1,30 @@
+{
+  "name": "text-extractor-extension",
+  "version": "1.0.0",
+  "description": "Chrome extension to extract text from images and selected areas on web pages using OCR technology",
+  "main": "background/service-worker.js",
+  "scripts": {
+    "test": "jest",
+    "lint": "eslint .",
+    "build": "echo 'No build step required for this extension'"
+  },
+  "keywords": [
+    "chrome-extension",
+    "ocr",
+    "text-extraction",
+    "tesseract"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "tesseract.js": "^5.0.4"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "eslint": "^8.57.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  }
+}

@@ -1,0 +1,112 @@
+/* Selection overlay styles for Text Extractor extension */
+
+/* Overlay container - covers entire page */
+.text-extractor-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999999;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Selection box - the highlighted area */
+.text-extractor-selection-box {
+  position: absolute;
+  border: 2px solid #4285F4;
+  background-color: rgba(66, 133, 244, 0.1);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  display: none;
+  box-sizing: border-box;
+}
+
+/* Ensure selection box is visible and properly styled */
+#text-extractor-selection-box {
+  border: 2px solid #4285F4;
+  background-color: rgba(66, 133, 244, 0.15);
+  box-shadow: 
+    0 0 0 9999px rgba(0, 0, 0, 0.25),
+    inset 0 0 10px rgba(66, 133, 244, 0.2);
+  transition: none;
+}
+
+/* Overlay container ID styling */
+#text-extractor-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 2147483647; /* Maximum z-index to ensure it's on top */
+  pointer-events: auto;
+  cursor: crosshair;
+}
+
+/* Prevent text selection during selection mode */
+body.text-extractor-selecting,
+body.text-extractor-selecting * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  cursor: crosshair !important;
+}
+
+/* Loading states */
+.text-extractor-loading {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid #4285F4;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 2147483648; /* Above overlay */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  color: #202124;
+  min-width: 200px;
+}
+
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #e3f2fd;
+  border-top: 3px solid #4285F4;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-text {
+  font-weight: 500;
+  color: #5f6368;
+}
+
+/* Ensure overlay works on all websites */
+html.text-extractor-active {
+  cursor: crosshair;
+}
+
+html.text-extractor-active * {
+  cursor: crosshair !important;
+}
+
+html.text-extractor-loading {
+  cursor: wait !important;
+}
+
+html.text-extractor-loading * {
+  cursor: wait !important;
+}

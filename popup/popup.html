@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text Extractor</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div id="text-extractor-popup" class="popup-container">
+    <!-- Header -->
+    <div class="popup-header">
+      <h2 class="popup-title">Text Extractor</h2>
+      <div class="popup-controls">
+        <button id="edit-toggle" class="control-button edit-button" title="Toggle Edit Mode">
+          <span class="button-text">Edit</span>
+          <span class="button-icon">✏️</span>
+        </button>
+        <button id="copy-button" class="control-button copy-button primary" title="Copy to Clipboard">
+          <span class="button-text">Copy</span>
+          <span class="button-icon">📋</span>
+        </button>
+        <button id="close-button" class="control-button close-button" title="Close">
+          <span class="button-icon">✕</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div id="status-bar" class="status-bar">
+      <div class="status-info">
+        <span id="status-text" class="status-text">Ready</span>
+        <span id="char-count" class="char-count">0 characters</span>
+      </div>
+      <div class="status-indicators">
+        <div id="loading-indicator" class="loading-indicator" style="display: none;">
+          <div class="spinner"></div>
+          <span class="loading-text">Processing...</span>
+        </div>
+        <div id="error-indicator" class="error-indicator" style="display: none;">
+          <span class="error-icon">⚠️</span>
+          <span id="error-text" class="error-text"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="popup-content">
+      <!-- Text Display Mode -->
+      <div id="text-display" class="text-display">
+        <div id="extracted-text" class="extracted-text" contenteditable="false">
+          <!-- Extracted text will be inserted here -->
+        </div>
+      </div>
+
+      <!-- Text Edit Mode -->
+      <div id="text-editor" class="text-editor" style="display: none;">
+        <textarea id="text-input" class="text-input" placeholder="Edit extracted text here..."></textarea>
+        <div class="editor-controls">
+          <button id="save-edit" class="editor-button save-button">Save</button>
+          <button id="cancel-edit" class="editor-button cancel-button">Cancel</button>
+        </div>
+      </div>
+
+      <!-- OCR Results Details (collapsible) -->
+      <div id="details-section" class="details-section">
+        <button id="details-toggle" class="details-toggle">
+          <span class="details-icon">📊</span>
+          <span class="details-text">Details</span>
+          <span class="details-arrow">▼</span>
+        </button>
+        <div id="details-content" class="details-content" style="display: none;">
+          <div class="details-grid">
+            <div class="detail-item">
+              <span class="detail-label">Source:</span>
+              <span id="extraction-source" class="detail-value">DOM + OCR</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Images Processed:</span>
+              <span id="images-count" class="detail-value">0</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">OCR Confidence:</span>
+              <span id="ocr-confidence" class="detail-value">-</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Processing Time:</span>
+              <span id="processing-time" class="detail-value">-</span>
+            </div>
+          </div>
+
+          <!-- Errors Section -->
+          <div id="errors-section" class="errors-section" style="display: none;">
+            <h4 class="errors-title">Issues Encountered:</h4>
+            <ul id="errors-list" class="errors-list">
+              <!-- Error items will be inserted here -->
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="popup-footer">
+      <div class="footer-info">
+        <span class="footer-text">Text Extractor Extension</span>
+      </div>
+      <div class="footer-actions">
+        <button id="settings-button" class="footer-button" title="Settings">
+          ⚙️
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="popup.js"></script>
+</body>
+</html>
