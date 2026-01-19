@@ -25,8 +25,19 @@ class TextExtractorPopup {
     this.editToggle = document.getElementById('edit-toggle');
     this.copyButton = document.getElementById('copy-button');
     this.closeButton = document.getElementById('close-button');
-    this.copyActionButton = document.getElementById('copy-action-button');
-    this.closeActionButton = document.getElementById('close-action-button');
+
+    // Debug logging
+    console.log('Popup elements found:', {
+      popup: !!this.popup,
+      editToggle: !!this.editToggle,
+      copyButton: !!this.copyButton,
+      closeButton: !!this.closeButton
+    });
+
+    if (!this.popup) {
+      console.error('Popup container not found!');
+      return;
+    }
     this.textDisplay = document.getElementById('extracted-text');
     this.textInput = document.getElementById('text-input');
     this.saveEdit = document.getElementById('save-edit');
@@ -41,10 +52,13 @@ class TextExtractorPopup {
 
     // Bind event handlers
     this.editToggle.addEventListener('click', () => this.toggleEditMode());
-    this.copyButton.addEventListener('click', () => this.copyToClipboard());
+    this.copyButton.addEventListener('click', (event) => {
+      console.log('Copy button clicked via event listener');
+      this.copyToClipboard();
+    });
     this.closeButton.addEventListener('click', () => this.closePopup());
-    this.copyActionButton?.addEventListener('click', () => this.copyToClipboard());
-    this.closeActionButton?.addEventListener('click', () => this.closePopup());
+
+    console.log('Event listeners attached');
     this.saveEdit.addEventListener('click', () => this.saveEdit());
     this.cancelEdit.addEventListener('click', () => this.cancelEdit());
     this.detailsToggle.addEventListener('click', () => this.toggleDetails());
@@ -227,9 +241,13 @@ class TextExtractorPopup {
    * Copy text to clipboard
    */
   async copyToClipboard() {
+    console.log('Copy button clicked');
+
     const textToCopy = this.isEditMode ?
       (this.textInput ? this.textInput.value : '') :
       this.originalText;
+
+    console.log('Text to copy:', textToCopy ? `"${textToCopy.substring(0, 50)}..."` : 'empty');
 
     if (!textToCopy || !textToCopy.trim()) {
       this.updateStatus('No text to copy', 'error');
@@ -237,18 +255,19 @@ class TextExtractorPopup {
     }
 
     try {
-      await navigator.clipboard.writeText(textToCopy);
+      console.log('Attempting to copy text, secure context:', window.isSecureContext);
+      // Try modern Clipboard API first (requires secure context)
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(textToCopy);
+      } else {
+        // Fallback for non-secure contexts (HTTP sites)
+        await this.fallbackCopyToClipboard(textToCopy);
+      }
 
-      // Update buttons to show success
-      const originalText = this.copyButton?.querySelector('.button-text')?.textContent;
-      if (this.copyButton) {
-        this.copyButton.querySelector('.button-text').textContent = 'Copied!';
-        this.copyButton.classList.add('success');
-      }
-      if (this.copyActionButton) {
-        this.copyActionButton.querySelector('.action-text').textContent = 'Copied!';
-        this.copyActionButton.classList.add('success');
-      }
+      // Update button to show success
+      const originalText = this.copyButton.querySelector('.button-text').textContent;
+      this.copyButton.querySelector('.button-text').textContent = 'Copied!';
+      this.copyButton.classList.add('success');
 
       this.updateStatus('Text copied to clipboard');
 
@@ -259,7 +278,7 @@ class TextExtractorPopup {
 
     } catch (error) {
       console.error('Copy failed:', error);
-      this.updateStatus('Copy failed', 'error');
+      this.updateStatus('Copy failed - try selecting and copying manually', 'error');
 
       // Reset button text on error
       setTimeout(() => {
@@ -267,12 +286,41 @@ class TextExtractorPopup {
           this.copyButton.querySelector('.button-text').textContent = 'Copy Text';
           this.copyButton.classList.remove('success');
         }
-        if (this.copyActionButton) {
-          this.copyActionButton.querySelector('.action-text').textContent = 'Copy Text';
-          this.copyActionButton.classList.remove('success');
-        }
-      }, 2000);
+      }, 3000);
     }
+  }
+
+  /**
+   * Fallback copy method for non-secure contexts
+   * @param {string} text - Text to copy
+   */
+  async fallbackCopyToClipboard(text) {
+    return new Promise((resolve, reject) => {
+      try {
+        // Create a temporary textarea element
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        textArea.style.top = '-9999px';
+        document.body.appendChild(textArea);
+
+        // Select and copy
+        textArea.focus();
+        textArea.select();
+
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+
+        if (successful) {
+          resolve();
+        } else {
+          reject(new Error('Fallback copy failed'));
+        }
+      } catch (error) {
+        reject(error);
+      }
+    });
   }
 
   /**

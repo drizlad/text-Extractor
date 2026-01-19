@@ -225,12 +225,26 @@ async function showExtractionPopup(data, selection, tabId) {
             container.id = 'text-extractor-popup-container';
             document.body.appendChild(container);
 
-            // Initialize popup with data
-            if (window.textExtractorPopup) {
-              window.textExtractorPopup.show(data, selection);
-            } else {
-              console.error('Popup script not loaded');
-            }
+            // Wait for popup to be fully rendered, then initialize
+            setTimeout(() => {
+              if (window.textExtractorPopup) {
+                window.textExtractorPopup.show(data, selection);
+              } else {
+                console.error('Popup script not loaded or not available');
+                // Try to load popup script again
+                const popupScript = document.createElement('script');
+                popupScript.src = chrome.runtime.getURL('popup/popup.js');
+                popupScript.onload = () => {
+                  console.log('Popup script loaded via fallback');
+                  setTimeout(() => {
+                    if (window.textExtractorPopup) {
+                      window.textExtractorPopup.show(data, selection);
+                    }
+                  }, 100);
+                };
+                document.head.appendChild(popupScript);
+              }
+            }, 100);
           } catch (popupError) {
             console.error('Error creating popup:', popupError);
           }
