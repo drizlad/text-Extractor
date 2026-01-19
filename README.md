@@ -162,11 +162,24 @@ This is an open-source project. Contributions are welcome!
 
 ### Common Issues
 
-#### Extension Not Working
+#### Extension Not Working / Site Malfunctions
 1. **Check Permissions**: Ensure the extension has the required permissions in `chrome://extensions/`
 2. **Reload Extension**: Click the reload button in `chrome://extensions/`
 3. **Restart Browser**: Close and reopen Chrome
 4. **Check Console**: Open DevTools and check for error messages
+5. **Clear Cache**: Clear browser cache and reload the extension
+
+#### Selection Mode Issues (Plus Symbol Appears But Selection Doesn't Work)
+- **Wait for Activation**: Wait 1-2 seconds after clicking the extension icon for it to fully activate
+- **Check Page Load**: Ensure the webpage has fully loaded before trying to select
+- **Avoid Interactive Elements**: Don't start selections on buttons, links, or form elements
+- **Reload Extension**: The extension may need to be reloaded if it's in a bad state
+
+#### Site Malfunctions When Selecting
+- **Extension Conflict**: Try disabling other extensions temporarily
+- **Page Reload**: Reload the webpage and try again
+- **Selection Size**: Make sure your selection is at least 5x5 pixels
+- **Check Console**: Look for JavaScript errors in DevTools
 
 #### No Text Extracted
 - **Empty Selection**: Make sure you've selected content (minimum 5x5 pixels)
@@ -178,6 +191,7 @@ This is an open-source project. Contributions are welcome!
 - **Network Issues**: OCR requires internet for initial model download
 - **Memory Limits**: Large images may cause processing failures
 - **Browser Restrictions**: Some websites block extension scripts
+- **Tesseract.js**: Make sure the OCR library loaded properly
 
 #### Copy Not Working
 - **Clipboard Permissions**: Grant clipboard permissions if prompted
@@ -197,6 +211,21 @@ To enable debug logging:
 2. Enable "Developer mode"
 3. Click the extension's background page link
 4. Check the Console tab for detailed logs
+
+#### Content Script Debugging
+To debug content script issues:
+1. Open the webpage where the extension isn't working
+2. Open DevTools (F12)
+3. Go to Console tab
+4. Look for messages starting with `[TextExtractor]` or extension-related errors
+5. Check if selection overlay appears when clicking the extension icon
+
+#### Common Debug Messages
+- `"Selection overlay content script loaded"` - Content script is working
+- `"Selection mode activated"` - Extension icon was clicked successfully
+- `"Selection started at: X, Y"` - Mouse selection began
+- `"Selection completed"` - User finished selecting an area
+- `"Text extraction completed"` - OCR processing finished
 
 ### Reset Extension
 

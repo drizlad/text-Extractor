@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Page for Text Extractor Extension</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-image {
+            border: 1px solid #ccc;
+            margin: 10px 0;
+            max-width: 100%;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #e1e1e1;
+            border-radius: 5px;
+        }
+        h2 {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Text Extractor Extension Test Page</h1>
+
+    <div class="test-section">
+        <h2>Test 1: Simple Text Selection</h2>
+        <p>This is a paragraph with some text that you can select. Click the extension icon and try selecting this text.</p>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2: Image with Text</h2>
+        <p>Below is an image that contains text. Try selecting the image area.</p>
+        <!-- This would normally be a real image with text, but for testing we'll use a placeholder -->
+        <div style="background: #f0f0f0; border: 1px solid #ccc; padding: 20px; text-align: center; font-size: 18px; color: #333;">
+            SAMPLE TEXT IMAGE<br>
+            This is text inside an image area<br>
+            Try selecting this area
+        </div>
+        <p><em>Note: Replace this with actual images containing text for real testing.</em></p>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 3: Mixed Content</h2>
+        <p>This section has both text and image-like content. Try selecting different parts.</p>
+        <div style="display: flex; gap: 10px;">
+            <div style="background: #e8f5e8; padding: 10px; border: 1px solid #4caf50;">
+                Text Block 1
+            </div>
+            <div style="background: #fff3e0; padding: 10px; border: 1px solid #ff9800;">
+                Text Block 2
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Debugging Information</h2>
+        <p>Open Chrome DevTools (F12) and check the Console tab for extension logs.</p>
+        <p>If the extension isn't working:</p>
+        <ul>
+            <li>Make sure the extension is loaded in chrome://extensions/</li>
+            <li>Check for errors in the background page console</li>
+            <li>Check for errors in the content script console</li>
+            <li>Try reloading the extension</li>
+        </ul>
+    </div>
+
+    <script>
+        // Test script to check if extension is loaded
+        console.log('Test page loaded');
+
+        // Check if extension scripts are available
+        setTimeout(() => {
+            console.log('Extension check:', {
+                TextExtractor: typeof window.TextExtractor,
+                OCRProcessor: typeof window.OCRProcessor,
+                textExtractorPopup: typeof window.textExtractorPopup
+            });
+        }, 1000);
+    </script>
+</body>
+</html>

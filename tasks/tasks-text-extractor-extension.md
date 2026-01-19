@@ -129,3 +129,14 @@ Update the file after completing each sub-task, not just after completing an ent
   - [x] 6.14 Final code review and cleanup (remove console.logs, optimize code)
   - [x] 6.15 Update README.md with complete usage instructions and troubleshooting
   - [x] 6.16 Prepare extension for Chrome Web Store submission (icons, descriptions, screenshots)
+
+## Issues Fixed
+
+**✅ Extension Loading & Selection Issues Fixed:**
+- Fixed box-shadow CSS that was covering entire page and causing site malfunction
+- Improved message handling between service worker and content scripts
+- Added better error handling and debugging
+- Fixed event listener conflicts with webpage elements
+- Added initialization checks and delays for proper script loading
+- Created test page for debugging extension functionality
+- Added comprehensive troubleshooting documentation

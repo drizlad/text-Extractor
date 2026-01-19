@@ -11,12 +11,22 @@ let loadingIndicator = null;
 
 // Listen for messages from service worker
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === 'activateSelectionMode') {
-    activateSelectionMode();
-    sendResponse({ success: true });
-  } else if (message.action === 'deactivateSelectionMode') {
-    deactivateSelectionMode();
-    sendResponse({ success: true });
+  try {
+    console.log('Content script received message:', message.action);
+
+    if (message.action === 'activateSelectionMode') {
+      activateSelectionMode();
+      sendResponse({ success: true });
+    } else if (message.action === 'deactivateSelectionMode') {
+      deactivateSelectionMode();
+      sendResponse({ success: true });
+    } else {
+      console.log('Unknown message action:', message.action);
+      sendResponse({ success: false, error: 'Unknown action' });
+    }
+  } catch (error) {
+    console.error('Error handling message:', error);
+    sendResponse({ success: false, error: error.message });
   }
   return true;
 });
@@ -84,19 +94,58 @@ function deactivateSelectionMode() {
 function createSelectionOverlay() {
   // Remove existing overlay if any
   removeSelectionOverlay();
-  
-  // Create overlay container
-  selectionOverlay = document.createElement('div');
-  selectionOverlay.id = 'text-extractor-overlay';
-  selectionOverlay.className = 'text-extractor-overlay';
-  
-  // Create selection box
-  selectionBox = document.createElement('div');
-  selectionBox.id = 'text-extractor-selection-box';
-  selectionBox.className = 'text-extractor-selection-box';
-  
-  selectionOverlay.appendChild(selectionBox);
-  document.body.appendChild(selectionOverlay);
+
+  try {
+    // Create overlay container
+    selectionOverlay = document.createElement('div');
+    selectionOverlay.id = 'text-extractor-overlay';
+    selectionOverlay.className = 'text-extractor-overlay';
+    selectionOverlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 2147483647;
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+    `;
+
+    // Create selection box
+    selectionBox = document.createElement('div');
+    selectionBox.id = 'text-extractor-selection-box';
+    selectionBox.className = 'text-extractor-selection-box';
+    selectionBox.style.cssText = `
+      position: absolute;
+      border: 2px solid #4285F4;
+      background-color: rgba(66, 133, 244, 0.1);
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.3);
+      pointer-events: none;
+      display: none;
+      box-sizing: border-box;
+    `;
+
+    selectionOverlay.appendChild(selectionBox);
+
+    // Make sure body exists before appending
+    if (document.body) {
+      document.body.appendChild(selectionOverlay);
+    } else {
+      // If body doesn't exist yet, wait for it
+      document.addEventListener('DOMContentLoaded', () => {
+        if (document.body && !selectionOverlay.parentNode) {
+          document.body.appendChild(selectionOverlay);
+        }
+      });
+    }
+
+    console.log('Selection overlay created');
+  } catch (error) {
+    console.error('Error creating selection overlay:', error);
+  }
 }
 
 /**
@@ -117,16 +166,25 @@ function handleMouseDown(event) {
   if (!isSelectionModeActive || event.button !== 0) {
     return; // Only handle left mouse button
   }
-  
+
+  // Only prevent default if we're not clicking on interactive elements
+  const targetTag = event.target.tagName.toLowerCase();
+  const interactiveTags = ['a', 'button', 'input', 'select', 'textarea', 'label'];
+
+  if (interactiveTags.includes(targetTag) ||
+      event.target.closest('a, button, input, select, textarea, [role="button"], [onclick]')) {
+    return; // Don't interfere with interactive elements
+  }
+
   event.preventDefault();
   event.stopPropagation();
-  
+
   isSelecting = true;
-  
+
   // Get starting coordinates relative to viewport
   startX = event.clientX;
   startY = event.clientY;
-  
+
   // Initialize selection box position
   if (selectionBox) {
     selectionBox.style.left = startX + 'px';
@@ -135,6 +193,8 @@ function handleMouseDown(event) {
     selectionBox.style.height = '0px';
     selectionBox.style.display = 'block';
   }
+
+  console.log('Selection started at:', startX, startY);
 }
 
 /**
@@ -144,18 +204,21 @@ function handleMouseMove(event) {
   if (!isSelectionModeActive || !isSelecting || !selectionBox) {
     return;
   }
-  
-  event.preventDefault();
-  
+
+  // Only prevent default during actual selection
+  if (isSelecting) {
+    event.preventDefault();
+  }
+
   const currentX = event.clientX;
   const currentY = event.clientY;
-  
+
   // Calculate selection box dimensions
   const left = Math.min(startX, currentX);
   const top = Math.min(startY, currentY);
   const width = Math.abs(currentX - startX);
   const height = Math.abs(currentY - startY);
-  
+
   // Update selection box
   selectionBox.style.left = left + 'px';
   selectionBox.style.top = top + 'px';
@@ -249,8 +312,12 @@ async function handleSelectionComplete(selectionData) {
     if (typeof window.TextExtractor !== 'undefined' &&
         typeof window.TextExtractor.extractTextFromSelection === 'function') {
 
+      console.log('Using text extraction utilities');
+
       // Extract text using the text extractor utility
       const extractedData = await window.TextExtractor.extractTextFromSelection(selectionData);
+
+      console.log('Text extraction completed:', extractedData);
 
       // Send extracted data to service worker
       chrome.runtime.sendMessage({
@@ -260,8 +327,12 @@ async function handleSelectionComplete(selectionData) {
       });
 
     } else {
+      console.warn('Text extraction utilities not available, checking what is loaded:', {
+        TextExtractor: typeof window.TextExtractor,
+        extractTextFromSelection: typeof window.TextExtractor?.extractTextFromSelection
+      });
+
       // Fallback: send basic selection data
-      console.warn('Text extraction utilities not available, sending basic selection data');
       chrome.runtime.sendMessage({
         action: 'selectionComplete',
         data: selectionData
@@ -351,10 +422,28 @@ function preventSelection(event) {
 
 // Initialize: Check if selection mode should be active on page load
 // (This handles cases where the extension is activated before page fully loads)
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    // Selection mode will be activated via message from service worker
-  });
+function initializeContentScript() {
+  // Send ready message to service worker
+  try {
+    chrome.runtime.sendMessage({
+      action: 'contentScriptReady',
+      url: window.location.href
+    });
+  } catch (error) {
+    console.warn('Could not send ready message:', error);
+  }
 }
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeContentScript);
+} else {
+  initializeContentScript();
+}
+
+// Handle page unload to clean up
+window.addEventListener('beforeunload', () => {
+  deactivateSelectionMode();
+  hideLoadingIndicator();
+});
 
 console.log('Selection overlay content script loaded');

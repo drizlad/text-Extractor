@@ -29,25 +29,49 @@ chrome.action.onClicked.addListener(async (tab) => {
  */
 async function activateSelectionMode(tabId) {
   try {
-    // Inject selection overlay script if not already injected
-    await chrome.scripting.executeScript({
-      target: { tabId: tabId },
-      files: ['content/selection-overlay.js']
-    });
-    
-    // Send message to content script to activate selection mode
-    await chrome.tabs.sendMessage(tabId, {
+    // First, ensure content scripts are ready by injecting them if needed
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId: tabId },
+        files: ['content/selection-overlay.js']
+      });
+      console.log('Content script injected/ensured');
+    } catch (injectError) {
+      console.warn('Content script injection failed, but may already be loaded:', injectError);
+    }
+
+    // Wait a bit for scripts to initialize
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Send message to activate selection mode
+    const response = await chrome.tabs.sendMessage(tabId, {
       action: 'activateSelectionMode'
     });
-    
+
     // Update extension icon to show active state
     chrome.action.setBadgeText({ text: 'ON', tabId: tabId });
     chrome.action.setBadgeBackgroundColor({ color: '#4285F4' });
-    
-    console.log('Selection mode activated');
+
+    console.log('Selection mode activated successfully');
   } catch (error) {
     console.error('Error activating selection mode:', error);
-    throw error;
+
+    // Try one more time with a longer delay
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      const response = await chrome.tabs.sendMessage(tabId, {
+        action: 'activateSelectionMode'
+      });
+
+      chrome.action.setBadgeText({ text: 'ON', tabId: tabId });
+      chrome.action.setBadgeBackgroundColor({ color: '#4285F4' });
+
+      console.log('Selection mode activated on retry');
+    } catch (retryError) {
+      console.error('Selection mode activation failed completely:', retryError);
+      throw retryError;
+    }
   }
 }
 
@@ -176,25 +200,46 @@ async function showExtractionPopup(data, selection, tabId) {
     });
 
     // Create and inject popup HTML
-    const popupHtml = await fetch(chrome.runtime.getURL('popup/popup.html'))
-      .then(response => response.text());
+    try {
+      const popupHtml = await fetch(chrome.runtime.getURL('popup/popup.html'))
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          return response.text();
+        });
 
-    await chrome.scripting.executeScript({
-      target: { tabId: tabId },
-      func: (html, data, selection) => {
-        // Create popup container
-        const container = document.createElement('div');
-        container.innerHTML = html;
-        container.id = 'text-extractor-popup-container';
-        document.body.appendChild(container);
+      await chrome.scripting.executeScript({
+        target: { tabId: tabId },
+        func: (html, data, selection) => {
+          try {
+            // Remove existing popup if any
+            const existingPopup = document.getElementById('text-extractor-popup-container');
+            if (existingPopup) {
+              existingPopup.remove();
+            }
 
-        // Initialize popup with data
-        if (window.textExtractorPopup) {
-          window.textExtractorPopup.show(data, selection);
-        }
-      },
-      args: [popupHtml, data, selection]
-    });
+            // Create popup container
+            const container = document.createElement('div');
+            container.innerHTML = html;
+            container.id = 'text-extractor-popup-container';
+            document.body.appendChild(container);
+
+            // Initialize popup with data
+            if (window.textExtractorPopup) {
+              window.textExtractorPopup.show(data, selection);
+            } else {
+              console.error('Popup script not loaded');
+            }
+          } catch (popupError) {
+            console.error('Error creating popup:', popupError);
+          }
+        },
+        args: [popupHtml, data, selection]
+      });
+    } catch (fetchError) {
+      console.error('Error fetching popup HTML:', fetchError);
+    }
 
   } catch (error) {
     console.error('Error showing extraction popup:', error);
