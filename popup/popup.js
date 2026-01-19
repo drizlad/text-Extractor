@@ -118,48 +118,12 @@ class TextExtractorPopup {
   positionPopup(position) {
     if (!this.popup) return;
 
-    // Default positioning (center of screen)
-    let left = '50%';
-    let top = '50%';
-    let transform = 'translate(-50%, -50%)';
+    // Always center the popup on the page (viewport center) after selection
+    const left = '50%';
+    const top = '50%';
+    const transform = 'translate(-50%, -50%)';
 
-    if (position && position.viewportX !== undefined) {
-      // Try to position near the selection area
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      const popupWidth = 500; // Approximate popup width
-      const popupHeight = 400; // Approximate popup height
-
-      // Calculate preferred position (below and to the right of selection)
-      let preferredLeft = position.viewportX + position.viewportWidth + 10;
-      let preferredTop = position.viewportY;
-
-      // Check if it fits on screen
-      if (preferredLeft + popupWidth > viewportWidth) {
-        // Try left side
-        preferredLeft = position.viewportX - popupWidth - 10;
-        if (preferredLeft < 0) {
-          // Center horizontally
-          preferredLeft = (viewportWidth - popupWidth) / 2;
-        }
-      }
-
-      if (preferredTop + popupHeight > viewportHeight) {
-        // Try above selection
-        preferredTop = position.viewportY - popupHeight - 10;
-        if (preferredTop < 0) {
-          // Center vertically
-          preferredTop = (viewportHeight - popupHeight) / 2;
-        }
-      }
-
-      // Apply positioning
-      left = `${preferredLeft}px`;
-      top = `${preferredTop}px`;
-      transform = 'none';
-    }
-
-    // Apply styles
+    // Apply styles - always centered regardless of selection position
     this.popup.style.position = 'fixed';
     this.popup.style.left = left;
     this.popup.style.top = top;
