@@ -590,6 +590,10 @@ if (typeof window !== 'undefined') {
     extractSelectableText,
     extractTextFromSelection
   };
+  console.log('TextExtractor object created on window:', {
+    available: !!window.TextExtractor,
+    extractTextFromSelection: typeof window.TextExtractor.extractTextFromSelection
+  });
 }
 
 console.log('Text extractor content script loaded');

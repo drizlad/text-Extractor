@@ -1,12 +1,17 @@
 // Content script for selection overlay
 // Handles area selection on web pages
 
-let isSelectionModeActive = false;
-let isSelecting = false;
-let startX = 0;
-let startY = 0;
-let selectionOverlay = null;
-let selectionBox = null;
+// Check if already initialized to prevent duplicate declarations
+if (typeof window.textExtractorSelectionOverlay === 'undefined') {
+  window.textExtractorSelectionOverlay = true;
+
+  let isSelectionModeActive = false;
+  let isSelecting = false;
+  let startX = 0;
+  let startY = 0;
+  let selectionOverlay = null;
+  let selectionBox = null;
+  let loadingIndicator = null;
 let loadingIndicator = null;
 
 // Listen for messages from service worker
@@ -308,7 +313,20 @@ async function handleSelectionComplete(selectionData) {
   showLoadingIndicator('Extracting text from selection...');
 
   try {
-    // Check if text extraction utilities are available
+    // Wait for text extraction utilities to be available (with timeout)
+    let attempts = 0;
+    const maxAttempts = 50; // 5 seconds max wait
+    const checkInterval = 100; // 100ms intervals
+
+    while (attempts < maxAttempts) {
+      if (typeof window.TextExtractor !== 'undefined' &&
+          typeof window.TextExtractor.extractTextFromSelection === 'function') {
+        break;
+      }
+      attempts++;
+      await new Promise(resolve => setTimeout(resolve, checkInterval));
+    }
+
     if (typeof window.TextExtractor !== 'undefined' &&
         typeof window.TextExtractor.extractTextFromSelection === 'function') {
 
@@ -327,16 +345,50 @@ async function handleSelectionComplete(selectionData) {
       });
 
     } else {
-      console.warn('Text extraction utilities not available, checking what is loaded:', {
+      console.warn('Text extraction utilities not available after waiting, checking what is loaded:', {
         TextExtractor: typeof window.TextExtractor,
-        extractTextFromSelection: typeof window.TextExtractor?.extractTextFromSelection
+        extractTextFromSelection: typeof window.TextExtractor?.extractTextFromSelection,
+        windowKeys: Object.keys(window).filter(key => key.includes('Text'))
       });
 
-      // Fallback: send basic selection data
-      chrome.runtime.sendMessage({
-        action: 'selectionComplete',
-        data: selectionData
-      });
+      // Try to manually load the text extractor script
+      try {
+        console.log('Attempting to manually load text extractor script...');
+        const script = document.createElement('script');
+        script.src = chrome.runtime.getURL('content/text-extractor.js');
+        script.onload = () => {
+          console.log('Text extractor script loaded manually');
+          setTimeout(async () => {
+            if (window.TextExtractor?.extractTextFromSelection) {
+              console.log('Using manually loaded text extractor');
+              const extractedData = await window.TextExtractor.extractTextFromSelection(selectionData);
+              chrome.runtime.sendMessage({
+                action: 'textExtractionComplete',
+                data: extractedData,
+                selection: selectionData
+              });
+            } else {
+              throw new Error('Manual loading failed');
+            }
+          }, 200);
+        };
+        script.onerror = () => {
+          console.error('Failed to manually load text extractor script');
+          // Fallback: send basic selection data
+          chrome.runtime.sendMessage({
+            action: 'selectionComplete',
+            data: selectionData
+          });
+        };
+        document.head.appendChild(script);
+      } catch (manualLoadError) {
+        console.error('Manual script loading failed:', manualLoadError);
+        // Fallback: send basic selection data
+        chrome.runtime.sendMessage({
+          action: 'selectionComplete',
+          data: selectionData
+        });
+      }
     }
 
   } catch (error) {
@@ -447,3 +499,4 @@ window.addEventListener('beforeunload', () => {
 });
 
 console.log('Selection overlay content script loaded');
+} // Close the duplicate prevention if statement

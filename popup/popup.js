@@ -20,6 +20,16 @@ class TextExtractorPopup {
   }
 
   setupEventListeners() {
+    console.log('Setting up popup event listeners, document.body:', !!document.body);
+    console.log('Document readyState:', document.readyState);
+
+    // Wait for DOM to be ready if needed
+    if (!document.body) {
+      console.log('Document body not ready, waiting...');
+      setTimeout(() => this.setupEventListeners(), 100);
+      return;
+    }
+
     // Get DOM elements
     this.popup = document.getElementById('text-extractor-popup');
     this.editToggle = document.getElementById('edit-toggle');
@@ -29,13 +39,17 @@ class TextExtractorPopup {
     // Debug logging
     console.log('Popup elements found:', {
       popup: !!this.popup,
+      popupElement: this.popup,
       editToggle: !!this.editToggle,
       copyButton: !!this.copyButton,
-      closeButton: !!this.closeButton
+      closeButton: !!this.closeButton,
+      allElements: document.querySelectorAll('#text-extractor-popup').length
     });
 
     if (!this.popup) {
-      console.error('Popup container not found!');
+      console.error('Popup container not found! Available elements with similar IDs:');
+      const similarElements = document.querySelectorAll('[id*="popup"]');
+      similarElements.forEach(el => console.log('Found element:', el.id, el));
       return;
     }
     this.textDisplay = document.getElementById('extracted-text');

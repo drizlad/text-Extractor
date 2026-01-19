@@ -225,26 +225,24 @@ async function showExtractionPopup(data, selection, tabId) {
             container.id = 'text-extractor-popup-container';
             document.body.appendChild(container);
 
-            // Wait for popup to be fully rendered, then initialize
-            setTimeout(() => {
-              if (window.textExtractorPopup) {
-                window.textExtractorPopup.show(data, selection);
-              } else {
-                console.error('Popup script not loaded or not available');
-                // Try to load popup script again
-                const popupScript = document.createElement('script');
-                popupScript.src = chrome.runtime.getURL('popup/popup.js');
-                popupScript.onload = () => {
-                  console.log('Popup script loaded via fallback');
-                  setTimeout(() => {
-                    if (window.textExtractorPopup) {
-                      window.textExtractorPopup.show(data, selection);
-                    }
-                  }, 100);
-                };
-                document.head.appendChild(popupScript);
-              }
-            }, 100);
+            // Load popup script and CSS
+            const popupScript = document.createElement('script');
+            popupScript.src = chrome.runtime.getURL('popup/popup.js');
+            popupScript.onload = () => {
+              console.log('Popup script loaded successfully');
+              // Wait a bit for initialization, then show popup
+              setTimeout(() => {
+                if (window.textExtractorPopup) {
+                  window.textExtractorPopup.show(data, selection);
+                } else {
+                  console.error('Popup script loaded but window.textExtractorPopup not available');
+                }
+              }, 200);
+            };
+            popupScript.onerror = () => {
+              console.error('Failed to load popup script');
+            };
+            document.head.appendChild(popupScript);
           } catch (popupError) {
             console.error('Error creating popup:', popupError);
           }
