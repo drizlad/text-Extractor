@@ -25,6 +25,8 @@ class TextExtractorPopup {
     this.editToggle = document.getElementById('edit-toggle');
     this.copyButton = document.getElementById('copy-button');
     this.closeButton = document.getElementById('close-button');
+    this.copyActionButton = document.getElementById('copy-action-button');
+    this.closeActionButton = document.getElementById('close-action-button');
     this.textDisplay = document.getElementById('extracted-text');
     this.textInput = document.getElementById('text-input');
     this.saveEdit = document.getElementById('save-edit');
@@ -41,6 +43,8 @@ class TextExtractorPopup {
     this.editToggle.addEventListener('click', () => this.toggleEditMode());
     this.copyButton.addEventListener('click', () => this.copyToClipboard());
     this.closeButton.addEventListener('click', () => this.closePopup());
+    this.copyActionButton?.addEventListener('click', () => this.copyToClipboard());
+    this.closeActionButton?.addEventListener('click', () => this.closePopup());
     this.saveEdit.addEventListener('click', () => this.saveEdit());
     this.cancelEdit.addEventListener('click', () => this.cancelEdit());
     this.detailsToggle.addEventListener('click', () => this.toggleDetails());
@@ -97,9 +101,11 @@ class TextExtractorPopup {
       this.popup.style.display = 'flex';
     }
 
-    // Focus the copy button
+    // Focus the copy action button
     setTimeout(() => {
-      if (this.copyButton) {
+      if (this.copyActionButton) {
+        this.copyActionButton.focus();
+      } else if (this.copyButton) {
         this.copyButton.focus();
       }
     }, 100);
@@ -269,20 +275,39 @@ class TextExtractorPopup {
     try {
       await navigator.clipboard.writeText(textToCopy);
 
-      // Update button to show success
-      const originalText = this.copyButton.querySelector('.button-text').textContent;
-      this.copyButton.querySelector('.button-text').textContent = 'Copied!';
-      this.copyButton.classList.add('success');
-
-      setTimeout(() => {
-        this.copyButton.querySelector('.button-text').textContent = originalText;
-        this.copyButton.classList.remove('success');
-      }, 2000);
+      // Update buttons to show success
+      const originalText = this.copyButton?.querySelector('.button-text')?.textContent;
+      if (this.copyButton) {
+        this.copyButton.querySelector('.button-text').textContent = 'Copied!';
+        this.copyButton.classList.add('success');
+      }
+      if (this.copyActionButton) {
+        this.copyActionButton.querySelector('.action-text').textContent = 'Copied!';
+        this.copyActionButton.classList.add('success');
+      }
 
       this.updateStatus('Text copied to clipboard');
+
+      // Close popup after successful copy (with a short delay so user sees the success message)
+      setTimeout(() => {
+        this.closePopup();
+      }, 1500);
+
     } catch (error) {
       console.error('Copy failed:', error);
       this.updateStatus('Copy failed', 'error');
+
+      // Reset button text on error
+      setTimeout(() => {
+        if (this.copyButton) {
+          this.copyButton.querySelector('.button-text').textContent = 'Copy Text';
+          this.copyButton.classList.remove('success');
+        }
+        if (this.copyActionButton) {
+          this.copyActionButton.querySelector('.action-text').textContent = 'Copy Text';
+          this.copyActionButton.classList.remove('success');
+        }
+      }, 2000);
     }
   }
 
