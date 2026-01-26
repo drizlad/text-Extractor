@@ -1,4 +1,10 @@
 # Text Extractor Chrome Extension
+⚠️ DEPRECATED
+
+This repository is no longer maintained.
+
+The project was rebuilt from scratch.
+👉 Active version: https://github.com/YOUR_USERNAME/finpay
 
 A Chrome extension that enables users to extract text from images and selected areas on any webpage using OCR (Optical Character Recognition) technology.
 
